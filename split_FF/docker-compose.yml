@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  split_ff:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: split_ff
+    networks:
+      - kafka_default
+
+
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+      - split_to_pop_ff:/data_split_pop
+      - ../../data/FF:/input
+networks:
+  kafka_default:
+    external: true
+
+volumes:
+  split_to_pop_ff:
+    external: true
