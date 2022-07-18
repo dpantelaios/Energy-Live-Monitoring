@@ -1,0 +1,44 @@
+.buttons {
+    width: 960px;
+    display: inline;
+}
+.words {
+    width: 960px;
+    display: inline;
+}
+.button2{
+    background-color: #2196F3;
+    color: white;
+    left : 80px;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 1px;
+    cursor: pointer;
+    border: 1px solid dodgerblue;
+}
+
+.button2:hover {
+    background-color: #b2b4b2; /* Green */
+    color: white;
+}
+
+.extend{
+    background-color: #2196F3;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    /* display: inline-block;*/
+    font-size: 16px;
+    margin: 4px 1px;
+    cursor: pointer;
+    border: 1px solid dodgerblue;}
+
+.extend:hover {
+    background-color: #b2b4b2; /* Green */
+    color: white;
+}

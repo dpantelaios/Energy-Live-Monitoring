@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  display_atl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: display_atl
+    networks:
+      - kafka_default
+    ports:
+      - 20001:5000
+    depends_on:
+      - db_disp_atl
+
+    volumes:
+      - pop_to_disp_atl:/data_pop_disp
+
+  db_disp_atl:
+    container_name: db_disp_atl
+    image: mysql:8.0
+    networks:
+      - kafka_default
+    environment:
+      - MYSQL_DATABASE=display_atl
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+
+
+networks:
+  kafka_default:
+    external: true
+
+volumes:
+  pop_to_disp_atl:
+    name: pop_to_disp_atl
