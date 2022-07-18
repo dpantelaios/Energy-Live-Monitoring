@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  populate_agpt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: populate_agpt
+    networks:
+      - kafka_default
+    depends_on:
+      - db_pop_agpt
+    volumes:
+      - split_to_pop_agpt:/data_split_pop
+      - pop_to_disp_agpt:/data_pop_disp
+
+  db_pop_agpt:
+    container_name: db_pop_agpt
+    image: mysql:8.0
+    networks:
+      - kafka_default
+    environment:
+      - MYSQL_DATABASE=populate_aggr_generation_per_type
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+
+networks:
+  kafka_default:
+    external: true
+
+volumes:
+  split_to_pop_agpt:
+    name: split_to_pop_agpt
+  pop_to_disp_agpt:
+    external: true
