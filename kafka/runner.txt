@@ -1,0 +1,31 @@
+0.
+cd microservices/kafka
+1.
+docker-compose build (if you have a dockerfile)
+docker-compose up
+docker-compose down -v
+
+2.
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh \ --create \ --bootstrap-server  127.0.0.1:9092 \ --replication-factor 1 \ --partitions 1 \ --topic test
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh \ --create \ --bootstrap-server  127.0.0.1:9092 \ --replication-factor 1 \ --partitions 1 \ --topic pop_to_disp_ATL
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh \ --create \ --bootstrap-server  127.0.0.1:9092 \ --replication-factor 1 \ --partitions 1 \ --topic split_to_pop_ATL
+3. #list all the current topics:
+docker exec -ti kafka /opt/bitnami/kafka/bin/kafka-topics.sh --list --bootstrap-server 127.0.0.1:9092
+
+4.
+npm run start:consumer
+npm run start:producer
+
+5.
+docker build . -t display_atl
+docker run -p 11111:5000 -d --network=kafka_default display_atl
+docker ps
+docker logs <container id or container name>
+docker network ls
+
+6. Connection with container
+docker exec -it populate_atl-mysql_server-1 bash
+mysql
+show databases;
+use populate_actual_total_load;
+select * from actualtotalload;
