@@ -44,7 +44,7 @@ docker-compose up
   * Kafka
   * LoginAndChooseDisplay microservice, Display microservices, Populate microservices (wait until the MySQL databases running along them report that they are ready for connections)
   * Split microservices (that simulate downloading of data and begin the chain)
-* CSV files containing the original data, based on the current configuration in the docker-compose.yml of the split microservices, MUST be located in the directories ../../data/ATL, ../../data/FF, ../../data/AGPT respectively (relative to the folder of each microservice because this folder will be mapped to the volume of the microservice so that it can read data.
+* CSV files containing the original data, based on the current configuration in the docker-compose.yml of the split microservices, *MUST* be located in the directories ../../data/ATL, ../../data/FF, ../../data/AGPT respectively (relative to the folder of each microservice because this folder will be mapped to the volume of the microservice so that it can read data.
 * Data, in a real world scenario, will be received by our split microservices every hour via ftp, but for simulation reasons we read one CSV file every 5 minutes. This can be changed by altering the interval in the split_ATL.js, split_FF.js, split_AGPT.js files. Setting the interval too low is expected to cause issues if the insertions to the database take longer than the interval between file reads since the databases will always be in a transitive state and never in a stable one.
 * In case you need to restart all the microservices it is recommended that you run 
   ```sh
