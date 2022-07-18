@@ -116,5 +116,5 @@ readdir(currDir).then(async (filenames) => { //read files with a certain interva
             }
             /*.........................................................................................*/
         //}
-    }, 15000) //interval between file reads. For realistic operation it should be 1 hour
+    }, 300000) //interval between file reads. For realistic operation it should be 1 hour
 })
