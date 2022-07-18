@@ -30,77 +30,29 @@ on GitHub.
 
 ## Installation
 
-Dillinger requires [Node.js](https://nodejs.org/) v10+ to run.
+Project runs entirely on docker containers. All it requires is building and uploading!
 
-Install the dependencies and devDependencies and start the server.
+In order to do that for every microservice all you need to do is navigate in its folder and run the following commands:
 
 ```sh
-cd dillinger
-npm i
-node app
+docker-compose build
+docker-compose up
 ```
+### Important notes:
 
+* Since the microservices are dependent on each other they need to be started in a certain sequence.
+  * Kafka
+  * LoginAndChooseDisplay microservice, Display microservices, Populate microservices (wait until the MySQL databases running along them report that they are ready for connections)
+  * Split microservices (that simulate downloading of data and begin the chain)
+* CSV files containing the original data, based on the current configuration in the docker-compose.yml of the split microservices, MUST be located in the directories ../../data/ATL, ../../data/FF, ../../data/AGPT respectively (relative to the folder of each microservice because this folder will be mapped to the volume of the microservice so that it can read data
+* Data, in a real world scenario, will be received by our split microservices every hour via ftp, but for simulation reasons we read one CSV file every 5 minutes. This can be changed by altering the interval in the split_ATL.js, split_FF.js, split_AGPT.js files. Setting the interval too low is expected to cause issues if the insertions to the database take longer than the interval between file reads since the databases will always be in a transitive state and never in a stable one.
+* In case you need to restart all the microservices it is recommended that you run 
+```sh
+docker-compose down -v
+```
+first in order to delete the volumes, databases and kafka message queue
+*The application runs on port 10000 and can be accessed from the browser (port configurable via the docker-compose.yml in login_and_choose_display) and the display microservices on ports 20001, 20002, 20003 -configurable via the docker-compose.yml files in display_ATL, display_FF, display_AGPT- although they are not directly accessible (they require a login token and without it they will redirect back to login and choose display MS). 
 For production environments...
-
-```sh
-npm install --production
-NODE_ENV=production node app
-```
-
-
-#### Building for source
-
-For production release:
-
-```sh
-gulp build --prod
-```
-
-Generating pre-built zip archives for distribution:
-
-```sh
-gulp build dist --prod
-```
-
-## Docker
-
-Dillinger is very easy to install and deploy in a Docker container.
-
-By default, the Docker will expose port 8080, so change this within the
-Dockerfile if necessary. When ready, simply use the Dockerfile to
-build the image.
-
-```sh
-cd dillinger
-docker build -t <youruser>/dillinger:${package.json.version} .
-```
-
-This will create the dillinger image and pull in the necessary dependencies.
-Be sure to swap out `${package.json.version}` with the actual
-version of Dillinger.
-
-Once done, run the Docker image and map the port to whatever you wish on
-your host. In this example, we simply map port 8000 of the host to
-port 8080 of the Docker (or whatever port was exposed in the Dockerfile):
-
-```sh
-docker run -d -p 8000:8080 --restart=always --cap-add=SYS_ADMIN --name=dillinger <youruser>/dillinger:${package.json.version}
-```
-
-> Note: `--capt-add=SYS-ADMIN` is required for PDF rendering.
-
-Verify the deployment by navigating to your server address in
-your preferred browser.
-
-```sh
-127.0.0.1:8000
-```
-
-## License
-
-MIT
-
-**Free Software, Hell Yeah!**
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
