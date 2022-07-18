@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  populate_atl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: populate_atl
+    networks:
+      - kafka_default
+    ports:
+      - 10002:5000
+    depends_on:
+      - mysql_server
+    volumes:
+      - split_to_pop_atl:/data_split_pop
+      - pop_to_disp_atl:/data_pop_disp
+
+  db_pop_atl:
+    container_name: db_pop_atl
+    image: mysql:8.0
+    networks:
+      - kafka_default
+    environment:
+      - MYSQL_DATABASE=populate_actual_total_load
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+
+networks:
+  kafka_default:
+    external: true
+
+volumes:
+  split_to_pop_atl:
+    name: split_to_pop_atl
+  pop_to_disp_atl:
+    external: true
