@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  split_atl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: split_atl
+    networks:
+      - kafka_default
+    ports:
+      - 10001:5000
+
+
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+      - split_to_pop_atl:/data_split_pop
+      - ../../data/ATL:/input
+networks:
+  kafka_default:
+    external: true
+
+volumes:
+  split_to_pop_atl:
+    external: true
