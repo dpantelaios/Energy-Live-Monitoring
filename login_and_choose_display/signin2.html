@@ -1,0 +1,66 @@
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+</head>
+
+
+<body>
+
+<h1> Energy-Live</h1>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+    let userId = " ";
+    let token = " ";
+    let come_from_signin = 1; //used in welcome.html to update last_login time only when the redirect is from the login page
+
+    let id = " ";
+    function handleCredentialResponse(response) {
+        console.log("Encoded JWT ID token: " + response.credential);
+        token = response.credential;  //get token from google authentication response
+        sessionStorage.setItem("token", token); //save token to be used in welcome page
+
+        location.href = "http://localhost:10000/choose_display/";  //redirect to welcome page
+    }
+    window.onload = function () {
+        come_from_signin = 1;
+        sessionStorage.setItem("come_from_signin", come_from_signin); //save come_from_signin variable to be used in welcome page
+        google.accounts.id.initialize({         // initialize google authenticator with our google project id
+            client_id: "1048578246040-poru62khftptdmt5aib9qkm6ndnlj5d0.apps.googleusercontent.com",
+            callback: handleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large" }  // customization attributes
+        );
+        google.accounts.id.prompt(); // also display the One Tap dialog
+    }
+
+</script>
+<!------------------------------------------------->
+<div id="g_id_onload"
+     data-client_id="1048578246040-poru62khftptdmt5aib9qkm6ndnlj5d0.apps.googleusercontent.com"
+     data-context="signin"
+     data-login_uri="http://localhost:5000/choose_display/"
+     data-auto_prompt="false"
+     data-callback="handleCredentialResponse">
+</div>
+
+<!--google login button and format-->
+<div class="g_id_signin"
+     data-type="standard"
+     data-shape="rectangular"
+     data-theme="outline"
+     data-text="signin_with"
+     data-size="large"
+     data-logo_alignment="left">
+</div>
+
+<!--add image ------>
+<div style="text-align: center;">
+    <img src="/images/wind.jpg" alt="HTML tutorial" style="width:1000px;height:500px; text-align: center;">
+</div>
+
+</body>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="ISO-8859-1">
+
+    <title>Extend plan page</title>
+
+    <!-- Specify the CSS File -->
+    <link rel="stylesheet" type="text/css" href="/extend_program_css.css" >
+
+
+</head>
+<body>
+<h1>Extend Plan</h1>
+
+<script>
+    let email = " ";
+    function fetchDATA(received_data) { //fetch data provided the token
+        const url_for_oauth = "https://oauth2.googleapis.com/tokeninfo?id_token=" + received_data;
+
+        return fetch(url_for_oauth).then(response => response.json()).then(json =>
+
+            JSON.stringify({"given_name": json.given_name, "family_name": json.family_name, "email":json.email}));
+    }
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        let token = sessionStorage.getItem('token'); //get token from welcome html file
+        let response = fetchDATA(token);
+        let t = await response;
+        t = JSON.parse(t);
+        email = t.email;
+        document.getElementById('first_name').innerHTML = t.given_name; //display given_name on first_name div
+        document.getElementById('last_name').innerHTML = t.family_name; //display family_name on last_name div
+        document.getElementById('email').innerHTML = t.email; //display email on mail div
+
+        let xhr = new XMLHttpRequest(); //check if user is in database
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                let rsp2 = JSON.parse(xhr.response);
+                let expire_date = new Date(rsp2[0].license_expiration_date); //get expiration date
+
+                let last_login = new Date(rsp2[0].last_login); //get last_login date
+                let last_login_to_print; //bring last_login date to desired form to display on last login div
+                last_login.setMonth(last_login.getMonth() + 1); //0-11 values instead of 1-12
+                last_login_to_print = last_login.getFullYear() + "-";
+
+                if(last_login.getMonth() < 10){
+                    last_login_to_print += "0" + last_login.getMonth() + "-";
+                }
+                else{ last_login_to_print += last_login.getMonth() + "-"; }
+
+                if(last_login.getDate() < 10){
+                    last_login_to_print += "0" + last_login.getDate() + " ";
+                }
+                else{ last_login_to_print += last_login.getDate() + " "; }
+
+                if(last_login.getHours() < 10){
+                    last_login_to_print += "0" + last_login.getHours() + ":";
+                }
+                else{ last_login_to_print += last_login.getHours() + ":"; }
+
+                if(last_login.getMinutes() < 10){
+                    last_login_to_print += "0" + last_login.getMinutes() + ":";
+                }
+                else{ last_login_to_print += last_login.getMinutes() + ":"; }
+
+                if(last_login.getSeconds() < 10){
+                    last_login_to_print += "0" + last_login.getSeconds();
+                }
+                else{ last_login_to_print += last_login.getSeconds(); }
+
+                document.getElementById('last_login').innerHTML = last_login_to_print;
+
+                let current_date = new Date(); //get current date
+
+                let days_left = expire_date.getTime() - current_date.getTime();
+                days_left = days_left/(1000*3600*24) //compute days left in subscription
+                if(days_left > 0) {
+                    document.getElementById('days_left').innerHTML = days_left;
+                }
+                else{
+                    document.getElementById('days_left').innerHTML = "0";
+                }
+            }
+        }
+        let url = "http://localhost:10000/choose_display/checkUser";
+        xhr.open('post', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+        xhr.send("email=" + email);
+    });
+
+    function extend_plan(){
+        let first_name = document.getElementById('first_name').value; //get user data from corresponding divs
+        let last_name = document.getElementById('last_name').value;
+        let days_extend = document.getElementById('days_extend').value;
+        let days_left = document.getElementById('days_left').innerText;
+
+        let xhr = new XMLHttpRequest(); //update user with new extended license expiration date
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+
+            }
+        }
+        let url = "http://localhost:10000/updateUser";
+        xhr.open('post', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+        xhr.send("first_name=" + first_name + "&last_name=" + last_name + "&email=" + email + "&days_left=" + days_left + "&days_extend=" + days_extend);
+    }
+
+</script>
+
+<!--display user data-->
+<form>
+    <table class="logintable">
+        <tr>
+            <th>First_Name: </th>
+            <td> <div id="first_name">First Name</div> </td>
+        </tr>
+        <tr>
+            <th>Last_Name: </th>
+            <td> <div id="last_name">Last Name</div> </td>
+        </tr>
+        <tr>
+            <th>Email: </th>
+            <td> <div id="email">Email</div> </td>
+        </tr>
+        <tr>
+            <th>Days Left: </th>
+            <td> <div id="days_left">Days Left</div></th>
+        </tr>
+        <tr>
+            <th>Last_Login: </th>
+            <td> <div id="last_login">Last Login</div> </td>
+        </tr>
+        <!--get number of days in order to extend license expiration date-->
+        <tr>
+            <th>Extend by(days): </th>
+            <td> <input type="number" id="days_extend" id="days_extend"> </td>
+            <td colspan="2"> <br/> </td>
+        </tr>
+        <tr>
+            <td> <input type="reset" value="Reset" > </td>
+            <td> <input type="submit" onclick = extend_plan() value="Extend_Plan" > </td>
+        </tr>
+        <tr>
+            <td> <a href="http://localhost:10000/choose_display/">BACK</a> </td>
+            <!--redirect to welcome page-->
+        </tr>
+    </table>
+</form>
+
+</body>
+</html>

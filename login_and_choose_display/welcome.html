@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="/welcome.css"></script>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/3/w3.css">
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+
+<body>
+<h1>Welcome</h1>
+<h2>What are you looking for ?</h2>
+<!--add 4 button, one for each of the 3 display types and one signout button-->
+<nav class="w3-bar w3-blue">
+  <button onClick=AGPT() class="w3-button w3-bar-item">Aggregation Per Type</button>
+  <button onClick=Physical_Flows() class="w3-button w3-bar-item">Physical Flows</button>
+  <button onClick=Actual_Total_Load() class="w3-button w3-bar-item">Actual Total Load</button>
+  <button class="w3-button w3-bar-item"class="g_id_signout" onclick = onSignout() class="w3-button w3-bar-item" style="float:right;"><b>Sign Out</b></button>
+</nav>
+
+<!--add image-->
+<div style="text-align: center;">
+  <img src="/images/mountain.jpg" alt="HTML tutorial" style="width:500px;height:300px; text-align: center;">
+</div>
+
+<!------>
+<style>
+  .collapsible {
+    background-color: #777;
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    position : fixed;
+  }
+
+  .active, .collapsible:hover {
+    background-color: #555;
+  }
+
+  .content {
+    padding: 0 18px;
+    display: none;
+    overflow: hidden;
+    background-color: #f1f1f1;
+  }
+</style>
+
+<div class="content">
+  <p>Find out how the energy prices get shaped in today's market. Choose country, dates , energy type and a diagram updated on real time will show up.</p>
+</div>
+<!--place to display days left of users subscription-->
+<div id = "days_left" style = "margin-left:30px;" > <b>DAYS LEFT</b></div>
+<!--extend subscription button-->
+<button id="extend" class="w3-button w3-LightGray" style="margin-top:15px; margin-left:30px; " onclick=extend_program()>Extend plan</button>
+
+
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+  let correct_token = 0;
+  let token = 0;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+  // function when actual total load button is pressed
+  function Actual_Total_Load(){
+    let token = sessionStorage.getItem('token'); //get token from sign in page
+    let xhr2 = new XMLHttpRequest(); //new http post request to another server to pass token to display microservice
+
+    xhr2.onreadystatechange = function () {
+      if (xhr2.readyState === 4) {
+        console.log(xhr2.response);
+        location.href = "http://localhost:20001/";  //after request is finished redirect to display actual total load server ms which runs on port 20001
+      }
+    }
+    //
+    let url = "http://localhost:20001/";
+    xhr2.open('post', url, true);
+    xhr2.withCredentials = true;  //use credentials to overcome cors obstacles(safety) because the request is to another server
+    xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    console.log(token);
+    xhr2.send("token=" + token);
+  }
+
+  // function when physical flows button is pressed
+  function Physical_Flows(){
+    let token = sessionStorage.getItem('token'); //get token from sign in page
+    let xhr2 = new XMLHttpRequest(); //new http post request to another server to pass token to display microservice
+
+    xhr2.onreadystatechange = function () {
+      if (xhr2.readyState === 4) {
+        console.log(xhr2.response);
+        location.href = "http://localhost:20002/"; //after request is finished redirect to physical flows ms server which runs on port 20002
+      }
+    }
+
+    let url = "http://localhost:20002/"; //url for post request
+    xhr2.open('post', url, true);
+    xhr2.withCredentials = true;
+    xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    xhr2.send("token=" + token); //send token in the body of the post request
+  }
+
+  // function when aggregation per type is pressed
+  function AGPT(){
+    let token = sessionStorage.getItem('token'); //get token from sign in page
+    let xhr2 = new XMLHttpRequest();
+
+    xhr2.onreadystatechange = function () {
+      if (xhr2.readyState === 4) {
+        console.log(xhr2.response);
+        location.href = "http://localhost:20003/"; //after request is finished redirect to agtp ms server which runs on port 20003
+      }
+    }
+    //
+    let url = "http://localhost:20003/"; //url for post request
+    xhr2.open('post', url, true);
+    xhr2.withCredentials = true;
+    xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    xhr2.send("token=" + token);
+  }
+  // fetch data from google authentication api using the provided token
+  function fetchDATA(received_data) {
+    const url_for_oauth = "https://oauth2.googleapis.com/tokeninfo?id_token=" + received_data;
+
+    return fetch(url_for_oauth).then(response => response.json()).then(json =>
+
+            JSON.stringify({"given_name": json.given_name, "family_name": json.family_name, "email":json.email}));
+  }
+
+  window.onload = async function () {
+    google.accounts.id.initialize({  // initialize google authenticator with our google project id
+      client_id: "1048578246040-poru62khftptdmt5aib9qkm6ndnlj5d0.apps.googleusercontent.com",
+    });
+    let email = " ";
+    let first_name = " ";
+    let last_name = " ";
+    token = sessionStorage.getItem('token');  //get token from signin page
+
+    let response = fetchDATA(token);  //fetch data for the token of the specified user
+    let t = await response; // wait until the fetch is completed
+    t = JSON.parse(t); //json parse response of fetch
+    email = t.email;
+    first_name = t.given_name;
+    last_name = t.family_name;
+
+    if(t.email == undefined){  //if the provided token does not correspond to an email then redirect to sign in page and set correct_token = 0 in order to
+                              //forbid an unauthorized user to use the provided services
+      correct_token = 0;
+      location.href = "http://localhost:10000/";
+    }
+    else{
+      correct_token = 1;
+    }
+    let come_from_signin = sessionStorage.getItem('come_from_signin'); //get come_from_signin variable in order to identify if the redirect came from sign in page
+    if(come_from_signin == 1) {
+      let xhr = new XMLHttpRequest(); //http request to find add User signed in with google into users database
+
+      xhr.onreadystatechange = function () {
+        console.log(xhr.readyState);
+        if (xhr.readyState === 4) {
+          let rsp = JSON.parse(xhr.response);
+
+          let xhr2 = new XMLHttpRequest(); //http request to get license expiration date of the specified user
+
+          xhr2.onreadystatechange = function () {
+            if (xhr2.readyState === 4) {
+              let rsp2 = JSON.parse(xhr2.response);
+              let expire_date = new Date(rsp2[0].license_expiration_date);  //get license expiration date
+              let current_date = new Date();  //get current date
+              let days_left = expire_date.getTime() - current_date.getTime();
+              days_left = (days_left / (1000 * 3600 * 24)).toString();  //compute days left in subscription in days
+              if (days_left > 0) {  //display days left on chosen div
+                document.getElementById('days_left').innerHTML = days_left.slice(0, 5) + " Days Left";
+              } else {
+                document.getElementById('days_left').innerHTML = "0";
+              }
+            }
+          }
+          let url2 = "http://localhost:10000/choose_display/checkUser/";
+          xhr2.open('post', url2, true);
+          xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+          xhr2.send("email=" + email);
+        }
+      }
+      //
+      let url = "http://localhost:10000/choose_display/addUser/";
+      xhr.open('post', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+      xhr.send("email=" + email + "&first_name=" + first_name + "&last_name=" + last_name);
+    }
+    else{  // if the redirect did not came from the sign in page just check user to get license expiration date
+      let xhr2 = new XMLHttpRequest();
+
+      xhr2.onreadystatechange = function () {
+        if (xhr2.readyState === 4) {
+          let rsp2 = JSON.parse(xhr2.response);
+          //console.log(rsp2);
+          let expire_date = new Date(rsp2[0].license_expiration_date);
+          console.log(expire_date);
+          let current_date = new Date();
+          let days_left = expire_date.getTime() - current_date.getTime();
+          days_left = (days_left / (1000 * 3600 * 24)).toString();
+          if (days_left > 0) {
+            document.getElementById('days_left').innerHTML = days_left.slice(0, 5) + " Days Left";
+          } else {
+            document.getElementById('days_left').innerHTML = "0";
+          }
+        }
+      }
+      let url2 = "http://localhost:10000/choose_display/checkUser/";
+      xhr2.open('post', url2, true);
+      xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+      xhr2.send("email=" + email);
+    }
+    come_from_signin = 0; //save variable with value 0, it will become 1 only from signin page
+    sessionStorage.setItem("come_from_signin", come_from_signin);
+  }
+
+  async function onSignout() {
+    //let token = sessionStorage.getItem('token');
+    const url_for_oauth = "https://oauth2.googleapis.com/tokeninfo?id_token=" + token;  //fetch users data
+    let response = fetch(url_for_oauth).then(response => response.json()).then(json =>
+            {
+              id = json.sub;
+              google.accounts.id.disableAutoSelect();
+              google.accounts.id.revoke(id, done => {   //give id of the authentication and revoke access token
+                console.log(done);
+              });
+            }
+    );
+    let t = await response;
+    location.href = "http://localhost:10000/"; //wait and redirect to login page
+  }
+
+  function extend_program(){
+    if(correct_token) { //if the token is correct
+      location.href = "http://localhost:10000/extendProgram/";  //redirect to extend program page when button is pressed
+    }
+    else{
+      alert("Invalid Token");
+    }
+  }
+</script>
+
+</body>
+</html>

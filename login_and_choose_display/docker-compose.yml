@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  login_and_choose_display:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: login_and_choose_display
+    networks:
+      - kafka_default
+    ports:
+      - 10000:5000
+    depends_on:
+      - db_users
+
+
+  db_users:
+    container_name: db_users
+    image: mysql:8.0
+    networks:
+      - kafka_default
+    environment:
+      - MYSQL_DATABASE=user_management
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+
+
+networks:
+  kafka_default:
+    external: true
