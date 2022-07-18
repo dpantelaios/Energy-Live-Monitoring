@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  display_agpt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: display_agpt
+    networks:
+      - kafka_default
+    ports:
+      - 20003:5000
+    depends_on:
+      - db_disp_agpt
+    volumes:
+      - pop_to_disp_agpt:/data_pop_disp
+
+  db_disp_apgt:
+    container_name: db_disp_agpt
+    image: mysql:8.0
+    networks:
+      - kafka_default
+    environment:
+      - MYSQL_DATABASE=display_agpt
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+
+networks:
+  kafka_default:
+    external: true
+
+volumes:
+  pop_to_disp_agpt:
+    name: pop_to_disp_agpt

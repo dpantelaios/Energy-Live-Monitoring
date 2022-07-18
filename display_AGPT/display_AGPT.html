@@ -1,0 +1,453 @@
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="/extend_program.css"></script>
+<script src="/highcharts_ATL.css"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/3/w3.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+
+<script type="text/javascript">
+  let token = " ";
+  let email = " ";
+  let first_name = " ";
+  let last_name = " ";
+  let data = [];
+  let correct_token = 0;
+  let expire_date = " ";
+  let days_left = 0;
+  let country_for_chart_title;
+  let first_plot_pressed = 0;
+  let while_ploting = 0;
+  let selected = false;
+  let production_type;
+  let options = { //option used for the chart
+
+    title: {
+      text: 'Aggr Generation Per Type'
+    },
+
+    subtitle: {
+      text: country_for_chart_title
+    },
+
+    yAxis: {
+      title: {
+        text: 'Aggr Generation Per Type'
+      },
+    },
+
+    xAxis: {
+      accessibility: {
+        rangeDescription: 'Range: 1 to 12000'
+      }
+    },
+
+    plotOptions: {
+      series: {
+        label: {
+          connectorAllowed: false
+        },
+        pointStart: 1
+      }
+    },
+
+    series: [{
+      name: 'Aggr Generation Per Type',
+      data: data
+    }],
+
+    responsive: {
+      rules: [{
+        condition: {
+          maxWidth: 500
+        },
+        chartOptions: {
+          legend: {
+            layout: 'horizontal',
+            align: 'center',
+            verticalAlign: 'bottom'
+          }
+        }
+      }]
+    }
+
+  };
+
+  function plot() {
+    //data = [null, null, 100];
+    Highcharts.chart('container', options) //plot chart with new data
+    while_ploting = 0; //the plotting stops so while_plotting variable becomes 0
+  }
+
+  function submit() {
+    first_plot_pressed = 1; //the plot button is pressed for the first time, from now on check for new data in database
+    while_ploting = 1; // the plotting starts, don't check for new data
+    let country = document.getElementById("country").value; //get country from html
+    options.subtitle.text = country; //display country on diagram
+    let date = document.getElementById("date").value; //get date from html
+    production_type = document.getElementById("gen_type").value; //get production_type from html
+
+    let LastUpdated = " "; //last date on diagram
+    let FirstDate = " "; //first date on diagram
+    data.length = 0;
+    if (country != "" & date != "" & days_left > 0 & production_type != "") { //if a country and date and production_type is given and license is not expired
+      let xhr = new XMLHttpRequest(); //give token, check if user is in database(came from signin ms through kafka)
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if ((xhr.response).length > 2) {
+            let xhr2 = new XMLHttpRequest();
+
+            xhr2.onreadystatechange = function () {
+              if (xhr2.readyState === 4) {
+                let rsp = JSON.parse(xhr2.response);
+                if (rsp.length > 0) {
+                  FirstDate = new Date(rsp[0].dateTime); //first date in database
+                  FirstDate.setMonth(FirstDate.getMonth() + 1); //bring date to the desired format and display on first_update div
+                  document.getElementById('first_update').innerHTML = "First Date on Diagram" + " " + FirstDate.getFullYear() + "-";
+
+                  if (FirstDate.getMonth() < 10) {
+                    document.getElementById('first_update').innerHTML += "0" + FirstDate.getMonth() + "-";
+                  } else {
+                    document.getElementById('first_update').innerHTML += FirstDate.getMonth() + "-";
+                  }
+
+                  if (FirstDate.getDate() < 10) {
+                    document.getElementById('first_update').innerHTML += "0" + FirstDate.getDate() + " ";
+                  } else {
+                    document.getElementById('first_update').innerHTML += FirstDate.getDate() + " ";
+                  }
+
+                  if (FirstDate.getHours() < 10) {
+                    document.getElementById('first_update').innerHTML += "0" + FirstDate.getHours() + ":";
+                  } else {
+                    document.getElementById('first_update').innerHTML += FirstDate.getHours() + ":";
+                  }
+
+                  if (FirstDate.getMinutes() < 10) {
+                    document.getElementById('first_update').innerHTML += "0" + FirstDate.getMinutes();
+                  } else {
+                    document.getElementById('first_update').innerHTML += FirstDate.getMinutes();
+                  }
+
+                  let current = 0; //get first data
+                  let resolution = " ";
+                  let number_of_dates_to_check = " ";
+                  let current_date = new Date(rsp[0].dateTime);
+                  let next_date = new Date(rsp[0].dateTime);
+                  let x_axis_value = 1;
+                  //console.log(current_date);
+                  while (current < rsp.length) {
+                    if (current == rsp.length - 1) {
+                      data.push([x_axis_value, rsp[current].actualGenerationOutput]); //add data(x_axis_value, y_axis_value) to data list used for the chart
+                      current += 1;
+                    } else {
+                      data.push([x_axis_value, rsp[current].actualGenerationOutput]); //push current data in the list
+
+                      resolution = rsp[current].resolutionCode; //find every how many minutes a new data is given
+                      number_of_dates_to_check = 60 / resolution;
+                      current_date = new Date(rsp[current].dateTime);
+                      next_date = new Date(rsp[current + 1].dateTime); //next date to plot in order to add holes for the data in between that are missing
+                      current += 1;
+
+                      while (current_date.getMinutes() < 60 - (60 / number_of_dates_to_check)) { //push data according to the given resolution
+                        current_date.setMinutes(current_date.getMinutes() + (60 / number_of_dates_to_check)); //data resolution to the current date
+                        x_axis_value += resolution / 60;
+                        if (current_date.getTime() == next_date.getTime() & current < (rsp.length - 1)) { //if the current date is equal to next date add data and go to next date
+                          data.push([x_axis_value, rsp[current].actualGenerationOutput]);
+                          current_date = new Date(rsp[current].dateTime);
+                          next_date = new Date(rsp[current + 1].dateTime);
+                          current += 1;
+                        } else if (current_date.getTime() == next_date.getTime() & current == (rsp.length - 1)) { //if the current date is not equal to next date add a hole to diagram
+                          data.push([x_axis_value, rsp[current].actualGenerationOutput]);
+                          current += 1;
+                        } else { //if last data push it in the list and dont go to next date
+                          data.push([x_axis_value, null]);
+                        }
+                      }
+                      x_axis_value += (resolution / 60); //add resolution to x_axis
+
+                      current_date.setMinutes(current_date.getMinutes() + (60 / number_of_dates_to_check)); //data resolution to the current date
+
+
+                      if (current < (rsp.length)) { //if not last data was pushed in list
+                        while (current_date.getTime() != next_date.getTime()) {
+                          current_date.setMinutes(current_date.getMinutes() + 15);
+                          data.push([x_axis_value, null]); //go to next date adding holes for the missing dates in between
+                          x_axis_value += 0.25;
+                        }
+                      }
+                    }
+                  }
+
+                  LastUpdated = new Date(rsp[rsp.length - 1].dateTime); //get last date send from backend(the backend send dates in ascending order
+                  LastUpdated.setMonth(LastUpdated.getMonth() + 1); //bring date to the desired format and display on last_update div(add one month because the values are 0-11 and not 1-12
+                  document.getElementById('last_update').innerHTML = "Last Update" + " " + LastUpdated.getFullYear() + "-";
+                  if (LastUpdated.getMonth() < 10) {
+                    document.getElementById('last_update').innerHTML += "0" + LastUpdated.getMonth() + "-";
+                  } else {
+                    document.getElementById('last_update').innerHTML += LastUpdated.getMonth() + "-";
+                  }
+
+                  if (LastUpdated.getDate() < 10) {
+                    document.getElementById('last_update').innerHTML += "0" + LastUpdated.getDate() + " ";
+                  } else {
+                    document.getElementById('last_update').innerHTML += LastUpdated.getDate() + " ";
+                  }
+
+                  if (LastUpdated.getHours() < 10) {
+                    document.getElementById('last_update').innerHTML += "0" + LastUpdated.getHours() + ":";
+                  } else {
+                    document.getElementById('last_update').innerHTML += LastUpdated.getHours() + ":";
+                  }
+
+                  if (LastUpdated.getMinutes() < 10) {
+                    document.getElementById('last_update').innerHTML += "0" + LastUpdated.getMinutes();
+                  } else {
+                    document.getElementById('last_update').innerHTML += LastUpdated.getMinutes();
+                  }
+                  //alert(data);
+                  plot();
+                  getProductionTypes();
+                } else if (rsp.length == 0) { //if no data alert user and update variable while_plotting
+                  alert("No data yet");
+                  while_ploting = 0;
+                }
+              }
+            }
+            url = "http://localhost:20003/getData/?country=" + country + "&date=" + date + "&production_type=" + production_type;
+            xhr2.open('get', url, true);
+            xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+            xhr2.send();
+          } else { //if the user is not in database then alert wrong token and don't display anything
+            alert("wrong token");
+          }
+        }
+      }
+
+      let url = "http://localhost:20003/checkUser";
+      xhr.open('post', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+      xhr.send("email=" + email);
+    } else {
+        if (days_left < 1) { //expired license
+          alert("expired_license");
+        }
+        else if(production_type == ""){ //production type was not chosen
+          alert("No Production Types Yet");
+          getProductionTypes(); //get production types from database
+        }
+        else { // the required Date and Country were not given
+          alert("Give Date and Country");
+        }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", async function () {
+    first_plot_pressed == 0; //at the beginning the plot button is not pressed
+    token = "<%= token %>"; //get token from backend
+    sessionStorage.setItem("token", token);
+
+    let response = fetchDATA(token); //fetch user data
+    let t = await response;
+    t = JSON.parse(t);
+
+    email = t.email;
+    first_name = t.given_name;
+    last_name = t.family_name;
+
+    document.getElementById('mail').innerHTML = t.email; //display email on mail div
+
+    if (t.email == undefined) {
+      correct_token = 0;
+      location.href = "http://localhost:10000/"; //wrong email => redirect to signin page and dont allow the user to display data
+    } else {
+      correct_token = 1;
+    }
+    console.log(correct_token);
+    let xhr = new XMLHttpRequest();
+    let country_select = document.getElementById('country'); //get available countries and add them as choices in the select input with value the mapCode
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        //alert(xhr.response);
+        var rsp2 = JSON.parse(xhr.response);
+        for (let i = 0; i < rsp2.length; i++) {
+          country_select.options[country_select.options.length] = new Option(rsp2[i].Country, rsp2[i].MapCode);
+        }
+        let xhr2 = new XMLHttpRequest(); //http request to get license expiration date of user
+
+        xhr2.onreadystatechange = function () {
+          if (xhr2.readyState === 4) {
+            var rsp2 = JSON.parse(xhr2.response);
+            expire_date = new Date(rsp2[0].license_expiration_date);
+            let current_date = new Date();
+            days_left = expire_date.getTime() - current_date.getTime();
+            days_left = (days_left / (1000 * 3600 * 24)).toString(); //compute days left
+            if (days_left > 0) {
+              document.getElementById('days_left').innerHTML = days_left.slice(0, 5) + " Days Left";
+            } else {
+              document.getElementById('days_left').innerHTML = "0";
+            }
+            getProductionTypes();
+          }
+        }
+        let url = "http://localhost:20003/checkUser";
+        xhr2.open('post', url, true);
+        xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+        xhr2.send("email=" + email);
+
+      }
+    }
+    var url = "http://localhost:20003/getCountries/";
+    xhr.open('get', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+    xhr.send();
+
+  });
+
+  function getProductionTypes() {
+    let xhr = new XMLHttpRequest();
+    let types_select = document.getElementById('gen_type'); //get available production types and add them as choices in the select input
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        let rsp2 = JSON.parse(xhr.response);
+        for (let i = 0; i < rsp2.length; i++) {
+          if(rsp2[i].ProductionType == production_type){ //if a production type is selected keep it selected
+            selected = true;
+          }
+          else{
+            selected = false;
+          }
+          // add production types to selection
+          types_select.options[types_select.options.length] = new Option(rsp2[i].ProductionType, rsp2[i].ProductionType, selected = selected);
+        }
+      }
+    }
+    let url = "http://localhost:20003/getProductionTypes/";
+    xhr.open('get', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+    xhr.send();
+  }
+
+  function fetchDATA(received_data) { //fetch data using token
+    const url_for_oauth = "https://oauth2.googleapis.com/tokeninfo?id_token=" + received_data;
+
+    return fetch(url_for_oauth).then(response => response.json()).then(json =>
+
+            JSON.stringify({"given_name": json.given_name, "family_name": json.family_name, "email": json.email}));
+  }
+
+  async function onSignout() { //revoke token using id created on the initial sign in
+    google.accounts.id.initialize({ //give project id
+      client_id: "1048578246040-poru62khftptdmt5aib9qkm6ndnlj5d0.apps.googleusercontent.com",
+    });
+    const url_for_oauth = "https://oauth2.googleapis.com/tokeninfo?id_token=" + token;
+    let response = fetch(url_for_oauth).then(response => response.json()).then(json => {
+      console.log(json);
+      id = json.sub;
+      console.log(id);
+      google.accounts.id.disableAutoSelect();
+      google.accounts.id.revoke(id, done => { //revoke token
+        console.log(done);
+      });
+            }
+    );
+    let t = await response;
+    location.href = "http://localhost:10000/"; //redirect to sign in page
+  }
+
+  function extend_program() {
+    if (correct_token) {
+      location.href = "http://localhost:10000/extendProgram/";
+    } else {
+      alert("Invalid Token");
+    }
+  }
+
+  const interval = setInterval(() => { //every 2 seconds check for new data
+    let xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        //alert(xhr.response);
+        let rsp = JSON.parse(xhr.response);
+        console.log(rsp);
+        if(rsp.plot_parameter == 1 & first_plot_pressed == 1 & while_ploting == 0){ //new data in database, plot was pressed one time and the chart is not being plotted at the moment
+          submit();
+        }
+        else if(rsp.plot_parameter == 1){ //new data in database, get productions types
+          getProductionTypes();
+        }
+      }
+    }
+    var url = "http://localhost:20003/getPlotBoolean/"; //get variable that shows if new data came
+    xhr.open('get', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    xhr.send();
+  }, 2000);
+</script>
+
+<html>
+<head>
+  <title>ENERGY LIVE 2022</title>
+  <!--    <h1>AGGREGATE GENERATION PER TYPE</h1>-->
+  <h1>AGGREGATE GENERATION PER TYPE</h1>
+</head>
+<body>
+
+<!--home, signout and extend plan button-->
+<nav class="w3-bar w3-blue">
+  <a href="http://localhost:10000/choose_display/" class="w3-button w3-bar-item">Home</a>
+  <button onClick=onSignout() class="w3-button w3-bar-item" style="float:right;"><b>Sign Out</b></button>
+  <button class="w3-button w3-bar-item" onClick=extend_program()>Extend plan</button>
+</nav>
+
+<!--place for the mail-->
+<div id="mail" style="float:right ; top:10px;">HERE GOES THE MAIL</div>
+
+<!--input data-->
+<form  style="position:relative; left:80px; top:30px; margin-bottom:50px;">
+  <b>Date From: </b> <input type="date" id="date" name="date"><br><br>
+
+  <b>Country: </b><select name="country" id="country"></select><br><br>
+
+  <b>Generation Type: </b><select name="gen_type" id="gen_type"></select><br><br>
+  <input   type="reset"  class="w3-button w3-LightGray" >
+</form>
+
+<!--submit button-->
+<button  style="margin-left:80px; top:30px; " class="w3-button w3-LightGray" onClick=submit()><b>Plot </b> </button>
+
+<!--chart place-->
+<figure className="highcharts-figure">
+  <div id="container"></div>
+  <p className="highcharts-description">
+  </p>
+</figure>
+
+<!-- <button id="extend" style="float:right;" onclick=extend_program()>Extend plan</button> -->
+<div className="words" style="position:relative; left:80px; ">
+  <!--  place for days left-->
+  <div id = "days_left"><b>DAYS LEFT</b></div>
+  <details >
+    <p>Days left till your subscription expires. If you wish to extend click the button "extend" in the blue bar
+      above.</p>
+  </details>
+  <!--  place for first date and last date on diagram-->
+  <div id="first_update"><b>FIRST DATE ON DIAGRAM:</b></div>
+  <div id="last_update"><b>LAST UPDATE:</b></div>
+</div>
+
+</body>
+</html>
