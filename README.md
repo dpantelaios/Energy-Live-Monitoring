@@ -40,19 +40,18 @@ docker-compose up
 ```
 ### Important notes:
 
-* Since the microservices are dependent on each other they need to be started in a certain sequence.
+* Since the microservices are dependent on each other they need to be started in a certain sequence:
   * Kafka
   * LoginAndChooseDisplay microservice, Display microservices, Populate microservices (wait until the MySQL databases running along them report that they are ready for connections)
   * Split microservices (that simulate downloading of data and begin the chain)
-* CSV files containing the original data, based on the current configuration in the docker-compose.yml of the split microservices, MUST be located in the directories ../../data/ATL, ../../data/FF, ../../data/AGPT respectively (relative to the folder of each microservice because this folder will be mapped to the volume of the microservice so that it can read data
+* CSV files containing the original data, based on the current configuration in the docker-compose.yml of the split microservices, MUST be located in the directories ../../data/ATL, ../../data/FF, ../../data/AGPT respectively (relative to the folder of each microservice because this folder will be mapped to the volume of the microservice so that it can read data.
 * Data, in a real world scenario, will be received by our split microservices every hour via ftp, but for simulation reasons we read one CSV file every 5 minutes. This can be changed by altering the interval in the split_ATL.js, split_FF.js, split_AGPT.js files. Setting the interval too low is expected to cause issues if the insertions to the database take longer than the interval between file reads since the databases will always be in a transitive state and never in a stable one.
 * In case you need to restart all the microservices it is recommended that you run 
   ```sh
   docker-compose down -v
   ```
-  first in order to delete the volumes, databases and kafka message queue
+  first in order to delete the volumes, databases and kafka message queue.
 * The application runs on port 10000 and can be accessed from the browser (port configurable via the docker-compose.yml in login_and_choose_display) and the display microservices on ports 20001, 20002, 20003 -configurable via the docker-compose.yml files in display_ATL, display_FF, display_AGPT- although they are not directly accessible (they require a login token and without it they will redirect back to login and choose display MS). 
-For production environments...
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
