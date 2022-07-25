@@ -51,7 +51,7 @@ docker-compose up
   docker-compose down -v
   ```
   first in order to delete the volumes, databases and kafka message queue.
-* The application runs on port 10000 and can be accessed from the browser (port configurable via the docker-compose.yml in login_and_choose_display) and the display microservices on ports 20001, 20002, 20003 -configurable via the docker-compose.yml files in display_ATL, display_FF, display_AGPT- although they are not directly accessible (they require a login token and without it they will redirect back to login and choose display MS). 
+* The application runs on port 10000 and can be accessed from the browser at localhost:10000 (port configurable via the docker-compose.yml in login_and_choose_display) and the display microservices on ports 20001, 20002, 20003 -configurable via the docker-compose.yml files in display_ATL, display_FF, display_AGPT- although they are not directly accessible (they require a login token and without it they will redirect back to login and choose display MS). 
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
