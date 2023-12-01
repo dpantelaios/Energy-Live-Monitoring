@@ -1,4 +1,4 @@
-# EnergyLive2022 Software-as-a-Service Technologies
+# EnergyLive2022 - Software as a Service Technologies
 ### Contributors
 *team 21*
 - Alexandros Moiras
