@@ -1,6 +1,6 @@
-# EnergyLive2022
+# EnergyLive2022 Software-as-a-Service Technologies
 ### Contributors
-**Software-as-a-Service Technologies** *team 21*
+*team 21*
 - Alexandros Moiras
 - Vasiliki Efthymiou
 - Dimitris Pantelaios
